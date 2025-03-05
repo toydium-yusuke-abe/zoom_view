@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 class ZoomListView extends StatefulWidget {
   final ListView child;
@@ -37,6 +37,7 @@ class ZoomView extends StatefulWidget {
     required this.child,
     required this.controller,
     this.onDoubleTapDown,
+    this.maxScale,
     this.scrollAxis = Axis.vertical,
   });
 
@@ -44,6 +45,7 @@ class ZoomView extends StatefulWidget {
   final void Function(ZoomViewDetails details)? onDoubleTapDown;
   final Widget child;
   final ScrollController controller;
+  final double? maxScale;
   final Axis scrollAxis;
 
   @override
@@ -64,6 +66,8 @@ class _ZoomViewState extends State<ZoomView>
     verticalTouchHandler = _TouchHandler(controller: verticalController);
     horizontalTouchHandler = _TouchHandler(controller: horizontalController);
     animationController = AnimationController(vsync: this);
+    maxZoomScale = widget.maxScale == null ? 0 : (1 / widget.maxScale!);
+
     super.initState();
   }
 
@@ -88,12 +92,13 @@ class _ZoomViewState extends State<ZoomView>
   late double horizontalFocalPointDistanceFromBottomFactor;
 
   late TapDownDetails _tapDownDetails;
+  late double maxZoomScale;
 
   double lastScale = 1;
 
   void updateScale(double scale) {
     setState(() {
-      this.scale = scale;
+      this.scale = scale.clamp(maxZoomScale, 1);
       this.lastScale = lastScale;
     });
   }
@@ -175,7 +180,13 @@ class _ZoomViewState extends State<ZoomView>
                     //TODO: allow developers to control zoom out feature.
                     //currently if you zoom out the List will be stuck to the
                     //left hand side of the screen. not the middle as it should.
-                    if (lastScale / details.scale <= 1.0) {
+                    final newScale = lastScale / details.scale;
+
+                    if (newScale < maxZoomScale) {
+                      setState(() {
+                        scale = maxZoomScale;
+                      });
+                    } else if (newScale <= 1.0) {
                       setState(() {
                         scale = lastScale / details.scale;
                       });
@@ -330,7 +341,7 @@ final class ZoomViewDetails {
 
 final class ZoomViewGestureHandler {
   int index = 0;
-  final List<int> zoomLevels;
+  final List<double> zoomLevels;
   final Duration duration;
   late ZoomViewDetails zoomViewDetails;
   void Function()? _animationListener;
