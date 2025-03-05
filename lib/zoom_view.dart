@@ -355,7 +355,6 @@ final class ZoomViewGestureHandler {
     if (index == zoomLevels.length) {
       index = 0;
     }
-
     final distanceFromOffset = zoomViewDetails.tapDownDetails.localPosition.dy;
     final horizontalDistanceFromOffset =
         zoomViewDetails.tapDownDetails.localPosition.dx;
@@ -410,6 +409,25 @@ final class ZoomViewGestureHandler {
       zoomViewDetails.horizontalController.jumpTo(horizontalOffset);
       zoomViewDetails.verticalController.jumpTo(verticalOffset);
     }
+  }
+
+  /// Find the nearest zoom level from the current scale
+  /// and change it to the next.
+  void onToggleZoom(ZoomViewDetails zoomViewDetails) {
+    // find nearest zoom level index
+    final scale = 1 / zoomViewDetails.scale;
+    final nearestZoomLevel = zoomLevels.reduce((a, b) {
+      return (a - scale).abs() < (b - scale).abs() ? a : b;
+    });
+    index = zoomLevels.indexOf(nearestZoomLevel);
+
+    // change nearest zoom level to next zoom level.
+    index++;
+    if (index == zoomLevels.length) {
+      index = 0;
+    }
+
+    onDoubleTap(zoomViewDetails);
   }
 }
 
