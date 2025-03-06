@@ -322,7 +322,7 @@ final class ZoomViewDetails {
   final TapDownDetails tapDownDetails;
   final double height;
   final double width;
-  final Function updateScale;
+  final void Function(double) updateScale;
   final ScrollController verticalController;
   final ScrollController horizontalController;
   final AnimationController animationController;
