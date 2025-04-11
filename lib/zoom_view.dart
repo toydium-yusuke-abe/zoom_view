@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 ///Wrapper for [ZoomView] that handles the controller automatically
 class ZoomListView extends StatefulWidget {
@@ -51,6 +51,7 @@ class ZoomView extends StatefulWidget {
     this.minScale = 1.0,
     this.onDoubleTapDown,
     this.scrollAxis = Axis.vertical,
+    this.onScaleChanged,
   });
 
   ///Callback invoked after a double tap down.
@@ -67,6 +68,9 @@ class ZoomView extends StatefulWidget {
 
   ///The minimum scale that the ZoomView can be zoomed to. Set to 0 to allow infinite zoom out
   final double minScale;
+
+  /// Callback invoked when the scale changes.
+  final ValueChanged<double>? onScaleChanged;
 
   @override
   State<ZoomView> createState() => _ZoomViewState();
@@ -151,8 +155,12 @@ class _ZoomViewState extends State<ZoomView> with TickerProviderStateMixin {
 
   void _updateScale(double scale) {
     setState(() {
+      final scaleChanged = _scale != scale;
       _scale = scale;
       _lastScale = scale;
+      if (scaleChanged) {
+        widget.onScaleChanged?.call(scale);
+      }
     });
   }
 
@@ -216,7 +224,11 @@ class _ZoomViewState extends State<ZoomView> with TickerProviderStateMixin {
                     (_scale - newScale) * _localFocalPoint.dx;
                 //This is the main logic to actually perform the scaling
                 setState(() {
+                  final scaleChanged = _scale != newScale;
                   _scale = newScale;
+                  if (scaleChanged) {
+                    widget.onScaleChanged?.call(newScale);
+                  }
                 });
                 _verticalController.jumpTo(verticalOffset);
                 _horizontalController.jumpTo(horizontalOffset);
@@ -337,7 +349,7 @@ final class ZoomViewDetails {
   final TapDownDetails tapDownDetails;
   final double height;
   final double width;
-  final Function updateScale;
+  final ValueChanged<double> updateScale;
   final ScrollController verticalController;
   final ScrollController horizontalController;
   final AnimationController animationController;
